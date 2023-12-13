@@ -1,0 +1,3 @@
+[submodule "modules/marionette-driver"]
+	path = modules/marionette-driver
+	url = https://github.com/AnAxNu/marionette-driver.git

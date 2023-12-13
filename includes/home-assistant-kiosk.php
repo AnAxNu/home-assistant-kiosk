@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__ . '/modules/marionette-driver/includes/marionette-driver.php');
+require_once(__DIR__ . '/../modules/marionette-driver/includes/marionette-driver.php');
 
 /**
  * Home Assistant kiosk

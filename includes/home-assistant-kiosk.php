@@ -1,5 +1,8 @@
 <?php
-require_once(__DIR__ . '/../modules/marionette-driver/includes/marionette-driver.php');
+//require_once(__DIR__ . '/../modules/marionette-driver/includes/marionette-driver.php');
+
+require_once(__DIR__ . '/../../marionette-driver/includes/marionette-driver.php');
+
 
 /**
  * Home Assistant kiosk
@@ -28,6 +31,11 @@ class HomeAssistantKiosk {
   public function __construct(string $baseUrl) {
     $this->baseUrl = $baseUrl;
 
+    //add trailing slash if missing
+    if( substr($this->baseUrl, -1) != '/') {
+      $this->baseUrl .= '/';
+    }
+
     $this->startDriver();
   }
 
@@ -43,7 +51,7 @@ class HomeAssistantKiosk {
    * @return void
    */
   protected function setError(string $errStr) {
-    echo('HomeAssistantKiosk error: ' . $errStr . "\n");
+    echo(get_class($this) . ' error: ' . $errStr . "\n");
   }
 
   /**
@@ -325,8 +333,77 @@ class HomeAssistantKiosk {
       }
     }
 
+    //navigate to base url to update the browser of the removed local storage login data
+    if($this->marionetteDriver->navigateToUrl($this->baseUrl) === false) {
+      $this->setError('Failed to navigate to base url for logout');
+    }
+
     return $rtn;
   }
+
+
+  /**
+   * Check if Home Assistant panel has finished loading after login
+   *
+   * @return bool True on if finished, false otherwise
+   */
+  public function hasFinishedLoggingIn() : bool {
+    $rtn = false;
+
+    //check if top panel exists
+    //todo: there is probably a better way to do check if the front end is fully loaded. API call?
+    $script = "document.querySelector('home-assistant').shadowRoot.querySelector('home-assistant-main').shadowRoot.querySelector('ha-panel-lovelace').shadowRoot.querySelector('hui-root').shadowRoot.querySelectorAll('.header').length";
+    
+    if( $this->marionetteDriver->executeScript($script) !== null ) {
+      $rtn = true;
+    }
+
+    return $rtn;
+  }
+
+  /**
+   * Remove top bar from Home Assistant
+   * 
+   * @param bool $clearStorage If all local storage should be cleared/deleted or only the login data
+   *
+   * @return bool True on success or false on fail
+   */
+  public function removeTopBar() : bool {
+    $rtn = false;
+
+    //first line removes the header.
+    //second line changes the height the header ha to zero so main element will use the space
+    $script = "document.querySelector('home-assistant').shadowRoot.querySelector('home-assistant-main').shadowRoot.querySelector('ha-panel-lovelace').shadowRoot.querySelector('hui-root').shadowRoot.querySelector('.header').remove();" . 
+              "document.querySelector(':root').style.setProperty('--header-height', '0');";
+
+    if($this->marionetteDriver->executeScript($script) !== null) {
+      $rtn = true;
+    }
+
+    return $rtn;
+  }
+
+  /**
+   * Remove side bar from Home Assistant
+   * 
+   * @param bool $clearStorage If all local storage should be cleared/deleted or only the login data
+   *
+   * @return bool True on success or false on fail
+   */
+  public function removeSideBar() : bool {
+    $rtn = false;
+
+    //remove sidebar
+    $script = "document.querySelector('home-assistant').shadowRoot.querySelector('home-assistant-main').shadowRoot.querySelector('ha-drawer').shadowRoot.querySelector('aside').remove();";
+
+    if($this->marionetteDriver->executeScript($script) !== null) {
+      $rtn = true;
+    }
+
+    return $rtn;
+  }
+
+  
 
 }
 

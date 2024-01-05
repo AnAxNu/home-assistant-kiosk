@@ -13,4 +13,15 @@ $dashboardUrl = 'lovelace-frame';
 $ha = new HomeAssistantKiosk($homeAssistantBaseUrl);
 
 $ha->login($username,$password,$dashboardUrl);
+
+//wait for login to finish
+while( $ha->hasFinishedLoggingIn() === false ) {
+  sleep(1);
+}
+
+//remove top bar
+$ha->removeTopBar();
+
+//remove side bar
+$ha->removeSideBar();
 ?>
